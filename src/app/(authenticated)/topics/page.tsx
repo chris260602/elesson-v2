@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { LEVELS_QUERY_KEY, TOPICS_QUERY_KEY } from "@/const/queryKey";
+import { invalidateTopics } from "@/utils/tanStackUtils";
 import { ColumnDef } from "@tanstack/react-table";
 import { Search, Loader2, Pencil, Trash2, Plus } from "lucide-react";
-import { toast } from "sonner";
 
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,14 +22,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CTable } from "@/components/core/CTable"; 
+import { CTable } from "@/components/core/CTable";
 
 // Custom Components & Utilities
 import { TopicDialog } from "@/components/dialog/topic/TopicDialog";
-import AxiosInstance from "@/utils/axiosInstance";
 import { fetchLevels, LevelResponseType } from "@/apiRoutes/level";
-import { fetchTopics } from "@/apiRoutes/topic";
+import { fetchTopics, createTopic, updateTopic, deleteTopic } from "@/apiRoutes/topic";
 import { TopicType } from "@/types/topic";
+import { showErrorMessage, showSuccessMessage } from "@/utils/notificationUtils";
 
 
 export default function TopicsPage() {
@@ -41,57 +42,51 @@ export default function TopicsPage() {
   const [deleteTarget, setDeleteTarget] = useState<TopicType | null>(null);
 
   // --- QUERIES ---
-  const { data: levels = {data:[],meta:{current_page:0,last_page:0,total:0}} as LevelResponseType } = useQuery({ 
-      queryKey: ["levels"], 
-      queryFn: ()=>fetchLevels(),
-      staleTime: 1000 * 60 * 60 
+  const { data: levels = { data: [], meta: { current_page: 0, last_page: 0, total: 0 } } as LevelResponseType } = useQuery({
+    queryKey: [LEVELS_QUERY_KEY],
+    queryFn: () => fetchLevels(),
+    staleTime: 1000 * 60 * 60
   });
 
-  const { data: topics = [], isLoading, isFetching } = useQuery({ 
-      queryKey: ["topics"], 
-      queryFn: ()=>fetchTopics({}) 
+  const { data: topics = [], isLoading, isFetching } = useQuery({
+    queryKey: [TOPICS_QUERY_KEY],
+    queryFn: () => fetchTopics({})
   });
 
   // --- MUTATIONS ---
   const createMutation = useMutation({
-    mutationFn: async (newData: Partial<TopicType>) => {
-      return await AxiosInstance.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic`, newData);
-    },
+    mutationFn: async (newData: Partial<TopicType>) => await createTopic(newData),
     onSuccess: () => {
-      toast.success("New topic created");
+      showSuccessMessage("New topic created");
       setIsDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["topics"] });
+      invalidateTopics(queryClient);
     },
     onError: (err: any) => {
-        toast.error(err.response?.data?.message || "Failed to create topic");
+      showErrorMessage(err.response?.data?.message || "Failed to create topic");
     }
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: Partial<TopicType>) => {
-      return await AxiosInstance.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic/${data.id}`, data);
-    },
+    mutationFn: async (data: Partial<TopicType>) => await updateTopic(data.id as string | number, data),
     onSuccess: () => {
-      toast.success("Topic updated");
+      showSuccessMessage("Topic updated");
       setIsDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["topics"] });
+      invalidateTopics(queryClient);
     },
     onError: (err: any) => {
-        toast.error(err.response?.data?.message || "Failed to update topic");
+      showErrorMessage(err.response?.data?.message || "Failed to update topic");
     }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string | number) => {
-      return await AxiosInstance.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic/${id}`);
-    },
+    mutationFn: async (id: string | number) => await deleteTopic(id),
     onSuccess: () => {
-      toast.success("Topic deleted");
+      showSuccessMessage("Topic deleted");
       setDeleteTarget(null);
-      queryClient.invalidateQueries({ queryKey: ["topics"] });
+      invalidateTopics(queryClient);
     },
     onError: (err: any) => {
-        toast.error(err.response?.data?.message || "Failed to delete topic");
+      showErrorMessage(err.response?.data?.message || "Failed to delete topic");
     }
   });
 
@@ -123,25 +118,25 @@ export default function TopicsPage() {
     {
       accessorKey: "name",
       header: "Topic Name",
-      cell: ({ row }) => <span className="font-semibold text-slate-700">{row.getValue("name")}</span>,
+      cell: ({ row }) => <span className="font-semibold">{row.getValue("name")}</span>,
     },
     {
       accessorKey: "available_level",
       header: "Level",
       cell: ({ row }) => {
         const levels = (row.getValue("available_level") as string[]) || [];
-        const sortedLevels = [...levels].sort(); 
-        
+        const sortedLevels = [...levels].sort();
+
         return (
           <div className="flex flex-wrap gap-1">
             {sortedLevels.length > 0 ? (
-                sortedLevels.map((lvl) => (
+              sortedLevels.map((lvl) => (
                 <Badge key={lvl} variant="secondary" className="px-2 py-0.5 text-xs font-medium border-slate-200">
-                    {lvl}
+                  {lvl}
                 </Badge>
-                ))
+              ))
             ) : (
-                <span className="text-slate-400 italic text-xs">No levels assigned</span>
+              <span className="text-slate-400 italic text-xs">No levels assigned</span>
             )}
           </div>
         );
@@ -153,10 +148,10 @@ export default function TopicsPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)} title="Edit">
-            <Pencil className="h-4 w-4 text-slate-500 hover:text-primary" />
+            <Pencil className="h-4 w-4 hover:text-primary" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(row.original)} title="Delete">
-            <Trash2 className="h-4 w-4 text-slate-500 hover:text-red-600" />
+            <Trash2 className="h-4 w-4 hover:text-red-600" />
           </Button>
         </div>
       ),
@@ -169,16 +164,16 @@ export default function TopicsPage() {
     <div>
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="flex flex-col gap-4">
-          
+
           {/* Row 1: Title and Add Button */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-                <CardTitle className="text-xl font-bold text-slate-800">Topic Management</CardTitle>
-                {isFetching && !isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground"/>}
+              <CardTitle className="text-xl font-bold">Topic Management</CardTitle>
+              {isFetching && !isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
-            
+
             <Button onClick={handleCreate} className="gap-2">
-                <Plus className="h-4 w-4" /> New Topic
+              <Plus className="h-4 w-4" /> New Topic
             </Button>
           </div>
 
@@ -203,16 +198,15 @@ export default function TopicsPage() {
             </div>
           ) : (
             <div className="animate-in fade-in duration-500">
-                <CTable columns={columns} data={filteredTopics} />
-                <div className="mt-4 text-xs text-muted-foreground border-t pt-4">
-                    Showing {filteredTopics.length} records
-                </div>
+              <CTable columns={columns} data={filteredTopics} />
+              <div className="mt-4 text-xs text-muted-foreground border-t pt-4">
+                Showing {filteredTopics.length} records
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* --- REUSABLE TOPIC DIALOG --- */}
       <TopicDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
@@ -229,7 +223,7 @@ export default function TopicsPage() {
             <AlertDialogTitle>Delete Topic?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete <span className="font-semibold text-foreground">{deleteTarget?.name}</span>?
-              <br/>This action cannot be undone.
+              <br />This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

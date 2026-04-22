@@ -1,35 +1,3 @@
-export type MediaItem = {
-  id?: string;
-  name: string;
-  percentage: number | 'completed';
-  timestamp?: number;
-  description?: string;
-  url?: string; // For preview
-};
-
-// export type WorksheetItem = {
-//   id: string; // 0 for new
-//   title: string;
-//   year: number;
-//   level: string; // ID
-//   levelName?: string; // Display
-//   topic: string; // ID
-//   topicName?: string; // Display
-//   created_by: string;
-  
-//   // Media Lists
-//   pdf?: MediaItem;
-//   videos: MediaItem[];
-//   graphics: MediaItem[];
-//   latest_worksheets: MediaItem[]; // Teacher's copy
-  
-//   // QR Data
-//   qr_code?: string;
-//   qrcode?: string;
-// };
-
-
-
 export type WorksheetFile = {
   id: string | number;
   name: string;

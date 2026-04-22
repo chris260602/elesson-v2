@@ -33,7 +33,6 @@ AxiosInstance.interceptors.response.use(
         // signOut();
         // return;
         if(session) {
-          console.log("masuk session")
           signOut();}
         // signOut();
         // try {

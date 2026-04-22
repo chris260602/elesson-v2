@@ -8,7 +8,5 @@ export type FetchTermsResponseType = {
 }
 export const fetchTerms = async ():Promise<TermType[]> => {
   const response = await AxiosInstance<FetchTermsResponseType>(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/schedule`);
-//   if (!response.ok) throw new Error("Failed to fetch terms");
-//   const result = await response.json();
   return response.data.data || [];
 };

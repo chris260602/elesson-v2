@@ -1,14 +1,14 @@
 import { FileText, Video, ImageIcon, Eye, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { MediaItem } from "@/types/worksheet";
+import { WorksheetFile } from "@/types/worksheet";
 import { Field, FieldLabel } from "../ui/field";
 
 interface FileRowProps {
-  item: MediaItem;
+  item: WorksheetFile;
   type: "videos" | "graphics" | "latest_worksheets";
   onView: (
-    item: MediaItem,
+    item: WorksheetFile,
     type: "videos" | "graphics" | "latest_worksheets",
   ) => void;
   onRemove: (
@@ -59,6 +59,7 @@ export function FileRow({
           </span>
           <div className="flex items-center gap-1">
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
@@ -69,6 +70,7 @@ export function FileRow({
             </Button>
 
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-red-500 hover:bg-red-50"
@@ -83,7 +85,7 @@ export function FileRow({
             </Button>
           </div>
         </div>
-        {item.percentage !== "completed" && item.percentage !== 100 && (
+        {item.percentage !== 100 && (
           <Field className="w-full max-w-sm mt-1">
             <FieldLabel htmlFor="progress-upload">
               <span>Uploading</span>

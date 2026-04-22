@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -17,18 +16,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// Shared Types
-// Assuming TopicItem defines available_level as string[] or string depending on your type file.
-// We use 'any' in the submit to bypass strict type checking for the CSV string conversion.
+
 import { TopicType } from "@/types/topic";
 import { LevelResponseType } from "@/apiRoutes/level";
+import { showErrorMessage } from "@/utils/notificationUtils";
 
 interface TopicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialData: TopicType | null; // null = Create Mode, object = Edit Mode
   levels: LevelResponseType;
-  onSubmit: (data: any) => void; // Changed to any to accept the payload structure
+  onSubmit: (data: any) => void;
   isLoading: boolean;
 }
 
@@ -41,7 +39,7 @@ export function TopicDialog({
   isLoading,
 }: TopicDialogProps) {
   const isEditing = !!initialData;
-  
+
   // Form State
   const [name, setName] = useState("");
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
@@ -50,7 +48,7 @@ export function TopicDialog({
   useEffect(() => {
     if (open) {
       setName(initialData?.name || "");
-      
+
       // Handle available_level safely:
       // 1. If it's a string "P1,P2", split it.
       // 2. If it's already an array ["P1", "P2"], use it.
@@ -80,28 +78,28 @@ export function TopicDialog({
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      toast.error("Topic Name is required");
+      showErrorMessage("Topic Name is required");
       return;
     }
     if (selectedLevels.length === 0) {
-      toast.error("Please select at least one level");
+      showErrorMessage("Please select at least one level");
       return;
     }
-    
+
     // Convert Array ["P1", "P2"] -> String "P1,P2" for payload
     const levelsPayload = selectedLevels.join(",");
 
-    onSubmit({ 
-        name, 
-        available_level: levelsPayload, 
-        // Include ID if editing
-        ...(initialData?.id && { id: initialData.id }) 
+    onSubmit({
+      name,
+      available_level: levelsPayload,
+      // Include ID if editing
+      ...(initialData?.id && { id: initialData.id })
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Topic" : "Add New Topic"}</DialogTitle>
         </DialogHeader>
@@ -124,7 +122,7 @@ export function TopicDialog({
               {levels.data.map((lvl) => (
                 <div key={lvl.id} className="flex items-center space-x-2">
                   <Checkbox
-                    id={`dialog-lvl-${lvl.id}`} 
+                    id={`dialog-lvl-${lvl.id}`}
                     checked={selectedLevels.includes(lvl.code)}
                     onCheckedChange={() => handleLevelToggle(lvl.code)}
                   />
@@ -138,7 +136,7 @@ export function TopicDialog({
               ))}
             </div>
             {selectedLevels.length === 0 && (
-                <p className="text-xs text-red-500 font-medium">* At least one level is required</p>
+              <p className="text-xs text-red-500 font-medium">* At least one level is required</p>
             )}
           </div>
         </div>

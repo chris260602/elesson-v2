@@ -1,25 +1,19 @@
 import { ApiErrorType } from "@/const/generalApis";
 import {
-  BOOKING_QUERY_KEY,
-  BRANCH_OPTIONS_QUERY_KEY,
-  BRANCH_QUERY_KEY,
-  CUSTOMER_HISTORY_QUERY_KEY,
-  CUSTOMER_OPTIONS_QUERY_KEY,
-  CUSTOMER_QUERY_KEY,
-  EMPLOYEE_BY_BRANCH_OPTIONS_QUERY_KEY,
-  EMPLOYEE_POSITION_OPTIONS_QUERY_KEY,
-  EMPLOYEE_QUERY_KEY,
-  INVENTORY_ITEM_CATEGORY_OPTIONS_QUERY_KEY,
-  INVENTORY_ITEM_QUERY_KEY,
-  PROMOTION_QUERY_KEY,
-  ROLE_QUERY_KEY,
-  SERVICE_BY_BRANCH_OPTIONS_QUERY_KEY,
-  SERVICE_CATEGORY_OPTIONS_QUERY_KEY,
-  SERVICE_OPTIONS_QUERY_KEY,
-  SERVICE_QUERY_KEY,
-  TRANSACTION_QUERY_KEY,
-  USER_HISTORY_QUERY_KEY,
-  USER_WITH_ROLE_QUERY_KEY,
+  LEVELS_QUERY_KEY,
+  TOPICS_QUERY_KEY,
+  TEMPLATES_QUERY_KEY,
+  LESSON_QUERY_KEY,
+  LESSON_DETAIL_QUERY_KEY,
+  TEMPLATE_DETAIL_QUERY_KEY,
+  WORKSHEETS_QUERY_KEY,
+  WORKSHEET_DETAIL_QUERY_KEY,
+  QR_CODE_QUERY_KEY,
+  SCHEDULE_TERMS_QUERY_KEY,
+  ARCHIVED_YEARS_QUERY_KEY,
+  CLASSES_QUERY_KEY,
+  E_LEARNING_QUERY_KEY,
+  REVISION_QUERY_KEY,
 } from "@/const/queryKey";
 import { QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -41,89 +35,65 @@ export async function safeAxios<T>(
   }
 }
 
+// --- E-Lesson & Worksheets Invalidation Helpers ---
 
-export const invalidateBranch = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [BRANCH_QUERY_KEY] });
-  queryClient.invalidateQueries({ queryKey: [BRANCH_OPTIONS_QUERY_KEY] });
-};
-export const invalidateEmployee = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [EMPLOYEE_QUERY_KEY] });
-  queryClient.invalidateQueries({
-    queryKey: [EMPLOYEE_BY_BRANCH_OPTIONS_QUERY_KEY],
-  });
+export const invalidateLevels = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [LEVELS_QUERY_KEY] });
 };
 
-export const invalidateBranchOptions = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [BRANCH_OPTIONS_QUERY_KEY] });
+export const invalidateTopics = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [TOPICS_QUERY_KEY] });
 };
 
-export const invalidateEmployeePositionOptions = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({
-    queryKey: [EMPLOYEE_POSITION_OPTIONS_QUERY_KEY],
-  });
+export const invalidateTemplates = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [TEMPLATES_QUERY_KEY] });
+  queryClient.invalidateQueries({ queryKey: [LESSON_QUERY_KEY] });
 };
 
-export const invalidateService = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [SERVICE_QUERY_KEY] });
-  queryClient.invalidateQueries({ queryKey: [SERVICE_OPTIONS_QUERY_KEY] });
-  queryClient.invalidateQueries({
-    queryKey: [SERVICE_BY_BRANCH_OPTIONS_QUERY_KEY],
-  });
-};
-export const invalidateServiceCategory = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({
-    queryKey: [SERVICE_CATEGORY_OPTIONS_QUERY_KEY],
-  });
+export const invalidateLessonDetail = (queryClient: QueryClient, id?: number | string) => {
+  if (id) {
+    queryClient.invalidateQueries({ queryKey: [LESSON_DETAIL_QUERY_KEY, id] });
+  } else {
+    queryClient.invalidateQueries({ queryKey: [LESSON_DETAIL_QUERY_KEY] });
+  }
 };
 
-export const invalidateCustomer = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [CUSTOMER_QUERY_KEY] });
-  queryClient.invalidateQueries({ queryKey: [CUSTOMER_OPTIONS_QUERY_KEY] });
-  queryClient.invalidateQueries({ queryKey: [CUSTOMER_HISTORY_QUERY_KEY] });
+export const invalidateTemplateDetail = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [TEMPLATE_DETAIL_QUERY_KEY] });
 };
 
-export const invalidateCustomerHistory = (
-  queryClient: QueryClient,
-  customerId: number
-) => {
-  queryClient.invalidateQueries({
-    queryKey: [`${CUSTOMER_HISTORY_QUERY_KEY}-${customerId}`],
-  });
+export const invalidateWorksheets = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [WORKSHEETS_QUERY_KEY] });
 };
 
-export const invalidateBooking = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [BOOKING_QUERY_KEY] });
+export const invalidateWorksheetDetail = (queryClient: QueryClient, id?: number | string) => {
+  if (id) {
+    queryClient.invalidateQueries({ queryKey: [WORKSHEET_DETAIL_QUERY_KEY, id] });
+  } else {
+    queryClient.invalidateQueries({ queryKey: [WORKSHEET_DETAIL_QUERY_KEY] });
+  }
 };
 
-export const invalidatePromotion = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [PROMOTION_QUERY_KEY] });
-  invalidateService(queryClient);
+export const invalidateQrCode = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [QR_CODE_QUERY_KEY] });
 };
 
-export const invalidateTransaction = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [TRANSACTION_QUERY_KEY] });
+export const invalidateScheduleTerms = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [SCHEDULE_TERMS_QUERY_KEY] });
 };
 
-export const invalidateInventoryItem = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [INVENTORY_ITEM_QUERY_KEY] });
+export const invalidateArchivedYears = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [ARCHIVED_YEARS_QUERY_KEY] });
 };
 
-export const invalidateInventoryItemCategoryOptions = (
-  queryClient: QueryClient
-) => {
-  queryClient.invalidateQueries({
-    queryKey: [INVENTORY_ITEM_CATEGORY_OPTIONS_QUERY_KEY],
-  });
+export const invalidateClasses = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [CLASSES_QUERY_KEY] });
 };
 
-export const invalidateRole = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [ROLE_QUERY_KEY] });
+export const invalidateELearning = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [E_LEARNING_QUERY_KEY] });
 };
 
-export const invalidateUserWithRole = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [USER_WITH_ROLE_QUERY_KEY] });
-};
-
-export const invalidateUserHistory = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: [USER_HISTORY_QUERY_KEY] });
+export const invalidateRevision = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: [REVISION_QUERY_KEY] });
 };

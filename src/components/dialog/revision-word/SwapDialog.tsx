@@ -3,26 +3,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import axios from "axios";
-import { useEffect } from "react";
-import AxiosInstance from "@/utils/axiosInstance";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { showErrorMessage, showSuccessMessage } from "@/utils/notificationUtils";
+import { swapQuestionNumber } from "@/apiRoutes/revision-words";
 
 export function SwapDialog({ open, onOpenChange, item, onSuccess }: any) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { register, handleSubmit, reset } = useForm();
 
     useEffect(() => {
-        if(open && item) reset({ question_no: "" }); // Reset on open
+        if (open && item) reset({ question_no: "" }); // Reset on open
     }, [open, item]);
 
     const onSubmit = async (data: any) => {
         if (!item?.id) return;
+        setIsSubmitting(true);
         try {
-            await AxiosInstance.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/revision-problem-sums/${item.id}/swap-question-no`, data);
-            toast.success("Swapped successfully");
-            onSuccess();
+            await swapQuestionNumber(item.id, data);
+            showSuccessMessage("Swapped successfully");
+            onSuccess(data.question_no); // Pass the new number for optimistic update
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to swap");
+            showErrorMessage(error.response?.data?.message || "Failed to swap");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -39,7 +43,9 @@ export function SwapDialog({ open, onOpenChange, item, onSuccess }: any) {
                         <Input type="number" {...register("question_no", { required: true })} />
                     </div>
                     <DialogFooter>
-                        <Button type="submit">Save</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Swapping...</> : "Save"}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

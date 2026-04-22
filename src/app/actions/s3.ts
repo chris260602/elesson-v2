@@ -23,9 +23,9 @@ export async function getPresignedUploadUrl(fileName: string, fileType: string) 
   });
 
   try {
-    // Generate a URL valid for 1 hour. 
+    // Generate a URL valid for 24 hour. 
     // The client must start the upload within this time.
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 * 60 });
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 * 60 * 24 });
     
     return { success: true, url: signedUrl };
   } catch (error) {

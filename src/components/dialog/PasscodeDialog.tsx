@@ -9,7 +9,7 @@ export default function PasscodeDialog({ open, onOpenChange, onSubmit, isLoading
   const [code, setCode] = useState("");
   return (
     <Dialog open={open} onOpenChange={(val) => { if(!val) setCode(""); onOpenChange(val); }}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[400px]" onInteractOutside={e=>e.preventDefault()}>
         <DialogHeader><DialogTitle>Enter Passcode</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); if(code) onSubmit(code); }} className="space-y-4 pt-4">
           <div className="space-y-2">

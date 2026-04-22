@@ -12,6 +12,5 @@ export const fetchLevels = async (year?: string): Promise<LevelResponseType> => 
   if (!year) url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/level`;
   
   const res = await AxiosInstance.get<LevelResponseType>(url);
-  console.log(res,'ini res')
   return res.data;
 };

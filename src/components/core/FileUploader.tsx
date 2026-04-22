@@ -3,18 +3,18 @@ import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FileRow } from "@/components/core/FileRow";
-import { MediaItem } from "@/types/worksheet";
+import { WorksheetFile } from "@/types/worksheet";
 
 interface FileUploaderProps {
   title: string;
   type: "videos" | "graphics" | "latest_worksheets";
-  items: MediaItem[];
+  items: WorksheetFile[];
   onFileUpload: (
     e: React.ChangeEvent<HTMLInputElement>,
     type: "videos" | "graphics" | "latest_worksheets"
   ) => void;
   onView: (
-    item: MediaItem,
+    item: WorksheetFile,
     type: "videos" | "graphics" | "latest_worksheets"
   ) => void;
   onRemove: (
@@ -41,6 +41,7 @@ export function FileUploader({
       <div className="flex justify-between items-center mb-2">
         <Label className="block font-semibold text-primary">{title}</Label>
         <Button
+          type="button"
           size="sm"
           variant="outline"
           className="relative h-7 text-xs gap-1"

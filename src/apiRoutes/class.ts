@@ -19,3 +19,13 @@ export const fetchLiveClasses = async (): Promise<LiveClassType[]> => {
   const res = await AxiosInstance.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/elearning`);
   return res.data.data || [];
 };
+
+export const createLiveClass = async (payload: { title: string; class: string; server: string }) => {
+  const res = await AxiosInstance.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/elearning`, payload);
+  return res.data;
+};
+
+export const deleteLiveClass = async (id: string) => {
+  const res = await AxiosInstance.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/elearning/${id}`);
+  return res.data;
+};

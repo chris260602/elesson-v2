@@ -3,10 +3,12 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useSession } from "next-auth/react"
 
+import { ModeToggle } from "./ModeToggle"
+
 export default function AppHeader() {
   const session = useSession();
     return(
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear bg-white sticky top-0 z-10">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear bg-white dark:bg-[#151515] sticky top-0 z-10">
   <div className="flex w-full items-center justify-between px-4 lg:px-6">
     
     {/* Left Side: Navigation Controls */}
@@ -22,12 +24,9 @@ export default function AppHeader() {
       </h1>
     </div>
 
-    {/* Right Side: Optional (Status or Breadcrumbs) */}
+    {/* Right Side: Theme Toggle */}
     <div className="hidden sm:flex items-center gap-2">
-       <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">System Live</span>
-       </div>
+       <ModeToggle />
     </div>
 
   </div>

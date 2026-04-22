@@ -10,8 +10,8 @@ import {
   getSortedRowModel,
   useReactTable,
   flexRender,
-  RowSelectionState, // Import types
-  OnChangeFn,        // Import types
+  RowSelectionState,
+  OnChangeFn,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -40,7 +40,7 @@ interface DataTableProps<TData, TValue> {
   initialPageSize?: number
   // Selection Props
   state?: {
-    rowSelection?: RowSelectionState; 
+    rowSelection?: RowSelectionState;
   };
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
   getRowId?: (originalRow: TData, index: number, parent?: any) => string;
@@ -63,8 +63,7 @@ export function CTable<TData, TValue>({
   enableSorting = true,
   enablePagination = true,
   initialPageSize = 10,
-  // Destructure new props
-  state, 
+  state,
   onRowSelectionChange,
   getRowId,
 }: DataTableProps<TData, TValue>) {
@@ -77,13 +76,13 @@ export function CTable<TData, TValue>({
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     // 2. Connect Selection Logic
-    getRowId: getRowId, 
-    enableRowSelection: true, 
+    getRowId: getRowId,
+    enableRowSelection: true,
     onRowSelectionChange: onRowSelectionChange,
     state: {
       sorting,
       // Safety check: ensure rowSelection is never undefined if state is passed
-      rowSelection: state?.rowSelection ?? {}, 
+      rowSelection: state?.rowSelection ?? {},
     },
     initialState: {
       pagination: { pageSize: initialPageSize },
@@ -91,7 +90,7 @@ export function CTable<TData, TValue>({
     onSortingChange: setSorting,
   })
 
-  // 3. FIX: Add safety check 'sorting?.[0]' to prevent "reading '0'" error
+  // 3. Add safety check 'sorting?.[0]' to prevent "reading '0'" error
   const currentSort = sorting?.[0]
   const activeSortColumnId = currentSort?.id
 
@@ -110,38 +109,38 @@ export function CTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      
+
       {/* MOBILE SORTING */}
       {enableSorting && (
         <div className="flex items-end gap-2 md:hidden">
           <div className="w-full space-y-1">
-             <label className="text-xs font-medium text-muted-foreground ml-1">Sort by</label>
-             <Select
-                value={activeSortColumnId || "none"}
-                onValueChange={handleMobileSortSelect}
-             >
-                <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select column..." />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="none">Default Order</SelectItem>
-                    {table.getAllColumns().filter(col => col.getCanSort()).map(column => (
-                         <SelectItem key={column.id} value={column.id}>
-                            {getColumnLabel(column)}
-                         </SelectItem>
-                    ))}
-                </SelectContent>
-             </Select>
+            <label className="text-xs font-medium text-muted-foreground ml-1">Sort by</label>
+            <Select
+              value={activeSortColumnId || "none"}
+              onValueChange={handleMobileSortSelect}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select column..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Default Order</SelectItem>
+                {table.getAllColumns().filter(col => col.getCanSort()).map(column => (
+                  <SelectItem key={column.id} value={column.id}>
+                    {getColumnLabel(column)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          
-          <Button 
-            variant="outline" 
+
+          <Button
+            variant="outline"
             size="icon"
             className="shrink-0 mb-[2px]"
             onClick={toggleSortDirection}
             disabled={!currentSort}
           >
-             {currentSort?.desc ? <ArrowDown className="h-4 w-4" /> : currentSort ? <ArrowUp className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4 opacity-50" />}
+            {currentSort?.desc ? <ArrowDown className="h-4 w-4" /> : currentSort ? <ArrowUp className="h-4 w-4" /> : <ArrowDownUp className="h-4 w-4 opacity-50" />}
           </Button>
         </div>
       )}
@@ -167,9 +166,9 @@ export function CTable<TData, TValue>({
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           {isSortable && (
                             <>
-                              {isSorted === "asc" ? <ArrowUp className="h-4 w-4 text-gray-900" /> : 
-                               isSorted === "desc" ? <ArrowDown className="h-4 w-4 text-gray-900" /> : 
-                               <ArrowUpDown className="h-4 w-4 text-white opacity-0 group-hover:opacity-100" />}
+                              {isSorted === "asc" ? <ArrowUp className="h-4 w-4 text-gray-900" /> :
+                                isSorted === "desc" ? <ArrowDown className="h-4 w-4 text-gray-900" /> :
+                                  <ArrowUpDown className="h-4 w-4 text-white opacity-0 group-hover:opacity-100" />}
                             </>
                           )}
                         </div>
@@ -183,7 +182,11 @@ export function CTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  data-testid={`desktop-row-${row.id}`}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -206,7 +209,11 @@ export function CTable<TData, TValue>({
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => (
-            <div key={row.id} className={`rounded-lg border text-card-foreground shadow-sm p-4 space-y-4 ${row.getIsSelected() ? 'bg-slate-50 border-primary' : 'bg-card'}`}>
+            <div
+              key={row.id}
+              data-testid={`mobile-row-${row.id}`}
+              className={`rounded-lg border text-card-foreground shadow-sm p-4 space-y-4 ${row.getIsSelected() ? 'bg-slate-50 border-primary' : 'bg-card'}`}
+            >
               {row.getVisibleCells().map((cell) => (
                 <div key={cell.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
                   <span className="text-sm font-medium text-muted-foreground">

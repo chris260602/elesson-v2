@@ -12,6 +12,7 @@ import {
   FileStack,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { WORKSHEETS_QUERY_KEY } from "@/const/queryKey";
 
 // --- UI COMPONENTS ---
 import {
@@ -115,6 +116,7 @@ interface LessonDetailDialogProps {
   topics: TopicType[];
   terms?: TermType[];
   onSave: (data: any) => void;
+  isLoading?: boolean;
 }
 
 export function LessonDetailDialog({
@@ -128,6 +130,7 @@ export function LessonDetailDialog({
   topics,
   terms = [],
   onSave,
+  isLoading,
 }: LessonDetailDialogProps) {
   // --- HELPERS ---
   const isMain = type === "main";
@@ -185,7 +188,7 @@ export function LessonDetailDialog({
 
   // --- QUERIES ---
   const { data: worksheets = [], isFetching: isFetchingWS } = useQuery({
-    queryKey: ["worksheets", selectedLevel, selectedTopic],
+    queryKey: [WORKSHEETS_QUERY_KEY, selectedLevel, selectedTopic],
     queryFn: () =>
       fetchWorksheetsByTopicAndLevel({
         levelId: Number(selectedLevel),
@@ -198,11 +201,11 @@ export function LessonDetailDialog({
   useEffect(() => {
     if (open) {
       // Always reset the tracker so Effect 2 runs to populate materials
-      setLoadedWorksheetId(""); 
+      setLoadedWorksheetId("");
 
       if (initialData) {
         const isSubLessonType = "passcode" in initialData;
-        
+
         // Populate the form METADATA only. 
         // We purposefully leave materials as [] or don't set them here,
         // so that the logic in Effect 2 handles the full merge.
@@ -272,41 +275,41 @@ export function LessonDetailDialog({
         const isEditingSameWorksheet = initialData && String(initialData.worksheet_id || initialData.worksheet?.id) === String(selectedWorksheet);
 
         if (isEditingSameWorksheet) {
-           // --- MERGE LOGIC ---
-           // 1. Get ALL materials from the API (Backend Source of Truth)
-           const backendMaterials = ws.materials || [];
-           // 2. Get SAVED materials from initialData (User's Saved Values)
-           const savedMaterials = initialData.materials || [];
+          // --- MERGE LOGIC ---
+          // 1. Get ALL materials from the API (Backend Source of Truth)
+          const backendMaterials = ws.materials || [];
+          // 2. Get SAVED materials from initialData (User's Saved Values)
+          const savedMaterials = initialData.materials || [];
 
-           mergedMaterials = backendMaterials.map(bm => {
-              // Find if this backend material was previously saved
-              const savedItem = savedMaterials.find(sm => sm.id === bm.id);
+          mergedMaterials = backendMaterials.map(bm => {
+            // Find if this backend material was previously saved
+            const savedItem = savedMaterials.find(sm => sm.id === bm.id);
 
-              if (savedItem) {
-                 // If saved, use the saved overrides and mark as selected
-                 return {
-                    ...bm, 
-                    ...savedItem, // Overwrite with saved instruction/link_title
-                    select: true,
-                    sequence: savedItem.sequence || bm.sequence
-                 };
-              }
-              
-              // If not saved, return the default backend item, unselected
+            if (savedItem) {
+              // If saved, use the saved overrides and mark as selected
               return {
-                 id: bm.id,
-                 name: bm.name,
-                 instruction: bm.instruction || "",
-                 link_title: bm.link_title || "",
-                 sequence: bm.sequence || 0,
-                 select: false
+                ...bm,
+                ...savedItem, // Overwrite with saved instruction/link_title
+                select: true,
+                sequence: savedItem.sequence || bm.sequence
               };
-           });
+            }
 
-           // Sort: We usually want saved items respecting their saved sequence, 
-           // but often it's easier to just sort by the default sequence or id if the UI doesn't allow drag-drop reordering of mixed items easily.
-           // Here we sort by sequence to keep it tidy.
-           mergedMaterials.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+            // If not saved, return the default backend item, unselected
+            return {
+              id: bm.id,
+              name: bm.name,
+              instruction: bm.instruction || "",
+              link_title: bm.link_title || "",
+              sequence: bm.sequence || 0,
+              select: false
+            };
+          });
+
+          // Sort: We usually want saved items respecting their saved sequence, 
+          // but often it's easier to just sort by the default sequence or id if the UI doesn't allow drag-drop reordering of mixed items easily.
+          // Here we sort by sequence to keep it tidy.
+          mergedMaterials.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
 
         } else {
           // --- FRESH LOAD LOGIC ---
@@ -348,7 +351,7 @@ export function LessonDetailDialog({
     const selectedWorksheet = worksheets.find(
       (worksheet) => worksheet.id === Number(data.worksheet_id),
     );
-    
+
     // Filter to only send SELECTED materials
     const selectedMaterials = data.materials.filter(m => m.select);
 
@@ -374,12 +377,20 @@ export function LessonDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl! max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-5xl! max-h-[90vh] flex flex-col p-0 gap-0" onInteractOutside={e => e.preventDefault()}>
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>{getDialogTitle()}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 bg-white">
+        <div className="flex-1 overflow-y-auto p-6 bg-white relative">
+          {isLoading && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 animate-in fade-in duration-200">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="mt-2 text-sm text-muted-foreground animate-pulse">
+                Saving lesson...
+              </p>
+            </div>
+          )}
           <Form {...form}>
             <form
               id="lesson-detail-form"
@@ -647,7 +658,7 @@ export function LessonDetailDialog({
                       <TableRow>
                         <TableHead className="w-[50px]">Use</TableHead>
                         <TableHead className="w-[80px] text-center">
-                          Seq
+                          Sequence
                         </TableHead>
                         <TableHead>Material Name</TableHead>
                         {isMain && <TableHead>Override Instruction</TableHead>}
@@ -748,7 +759,7 @@ export function LessonDetailDialog({
                           >
                             {watch("worksheet_id") ? (
                               <div className="flex items-center justify-center gap-2 text-yellow-600">
-                                <AlertCircle className="h-4 w-4" /> 
+                                <AlertCircle className="h-4 w-4" />
                                 {isFetchingWS ? "Loading materials..." : "No materials found in this worksheet."}
                               </div>
                             ) : (
@@ -834,7 +845,9 @@ export function LessonDetailDialog({
           <Button
             onClick={form.handleSubmit(handleSubmit)}
             className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
+            disabled={isLoading}
           >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Lesson
           </Button>
         </DialogFooter>

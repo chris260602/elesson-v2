@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 
 export default function LoadingPage() {
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-sky-50">
-      <div className="flex flex-col items-center gap-6 rounded-3xl bg-white p-12 shadow-xl shadow-sky-100/50">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-sky-50 dark:bg-gray-700">
+      <div className="flex flex-col items-center gap-6 rounded-3xl bg-white dark:bg-gray-700 p-12 shadow-xl shadow-sky-100/50">
         
         {/* Bouncing Dots Animation */}
         <div className="flex gap-4">

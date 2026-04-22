@@ -87,7 +87,7 @@ export function AppSidebar() {
     },
     { 
       title: "Resources", 
-      url: "/resources", 
+      url: "/", 
       icon: Library,
       roles: [] // Accessible by all
     },
@@ -187,7 +187,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="peer hover:bg-slate-50 transition-colors h-auto py-3"
+                  className="peer transition-colors h-auto py-3"
                 >
                   <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-white peer-hover:bg-[#00b6dd] text-white shrink-0">
                     <Grip className="size-5 text-primary peer-hover:text-white" />
@@ -197,9 +197,7 @@ export function AppSidebar() {
                       Math Mavens Inc.
                     </span>
                     <span className="text-[10px] opacity-60 font-medium uppercase tracking-wider whitespace-normal line-clamp-1">
-                      {isEmployee
-                        ? isEmployee.branch?.name
-                        : "Global Administrator"}
+                      E-Lesson
                     </span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4 opacity-40 shrink-0" />
@@ -235,7 +233,7 @@ export function AppSidebar() {
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
                             tooltip={item.title}
-                            className={`hover:bg-slate-50 h-auto py-2.5 items-start`}
+                            className={`h-auto py-2.5 items-start`}
                           >
                             {item.icon && (
                               <item.icon className="size-4 mt-0.5 shrink-0" />

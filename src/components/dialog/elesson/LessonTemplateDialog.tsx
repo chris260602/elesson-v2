@@ -15,7 +15,6 @@ import {
   Layers,
   Save,
 } from "lucide-react";
-import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 
 // UI Components
@@ -68,6 +67,7 @@ import {
 } from "@/types/template";
 import { CTable } from "@/components/core/CTable";
 import { DeleteConfirmDialog } from "@/components/core/DeleteConfirmDialog";
+import { showErrorMessage, showSuccessMessage } from "@/utils/notificationUtils";
 
 // --- SCHEMA ---
 const formSchema = z.object({
@@ -90,6 +90,7 @@ interface LessonTemplateDialogProps {
   levels: LevelType[];
   topics: TopicType[];
   terms: TermType[];
+  onSuccess?: () => void;
 }
 
 export function LessonTemplateDialog({
@@ -100,12 +101,15 @@ export function LessonTemplateDialog({
   levels,
   topics,
   terms,
+  onSuccess,
 }: LessonTemplateDialogProps) {
   // --- STATE ---
   const [step, setStep] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+  const [isSubItemSaving, setIsSubItemSaving] = useState(false);
+  const [isSequenceSaving, setIsSequenceSaving] = useState(false);
+
   // Delete State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -152,7 +156,7 @@ export function LessonTemplateDialog({
   const reviewList = useFieldArray({
     control,
     name: "review_lesson",
-    keyName: "_id", 
+    keyName: "_id",
   });
   const mainList = useFieldArray({
     control,
@@ -202,7 +206,7 @@ export function LessonTemplateDialog({
           })
           .catch((err) => {
             console.error(err);
-            toast.error("Failed to fetch details");
+            showErrorMessage("Failed to fetch details");
             onOpenChange(false);
           })
           .finally(() => setIsFetching(false));
@@ -226,7 +230,7 @@ export function LessonTemplateDialog({
   const handleStep1Submit = async () => {
     const valid = await form.trigger(["year", "level", "term", "published_at"]);
     if (!valid) {
-      toast.error("Please fill in required fields");
+      showErrorMessage("Please fill in required fields");
       return;
     }
 
@@ -250,22 +254,23 @@ export function LessonTemplateDialog({
       let result;
       if (currentValues.id) {
         result = await updateLessonTemplate(currentValues.id, payload);
-        toast.success("Template updated successfully");
+        showSuccessMessage("Template updated successfully");
       } else {
         result = await createLessonTemplate(payload);
-        toast.success("New template created");
+        showSuccessMessage("New template created");
       }
 
       if (result) {
         setValue("id", result.id);
         setFullLessonData(result);
+        onSuccess?.();
       }
 
       setStep(2);
     } catch (error: any) {
       console.error(error);
       const errMsg = error.response?.data?.message || "Failed to save template";
-      toast.error(errMsg);
+      showErrorMessage(errMsg);
     } finally {
       setIsSaving(false);
     }
@@ -278,10 +283,15 @@ export function LessonTemplateDialog({
 
     if (!currentId) return;
 
+    setIsSequenceSaving(true);
+
     const items =
       type === "review" ? getValues("review_lesson") : getValues("main_lesson");
 
-    if (!items || items.length === 0) return;
+    if (!items || items.length === 0) {
+      setIsSequenceSaving(false);
+      return;
+    }
 
     const payload = items.map((item: any, idx: number) => ({
       worksheet_id: item.worksheet_id || item.worksheet?.id || item.id,
@@ -290,10 +300,12 @@ export function LessonTemplateDialog({
 
     try {
       await updateLessonSequence(currentId, type, payload);
-      toast.success(`${type === "main" ? "Main" : "Review"} sequence saved`);
+      showSuccessMessage(`${type === "main" ? "Main" : "Review"} sequence saved`);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save sequence");
+      showErrorMessage("Failed to save sequence");
+    } finally {
+      setIsSequenceSaving(false);
     }
   };
 
@@ -320,11 +332,11 @@ export function LessonTemplateDialog({
       const listHandler = type === "review" ? reviewList : mainList;
       listHandler.remove(index);
 
-      toast.success(`${type === "main" ? "Main" : "Review"} lesson deleted`);
+      showSuccessMessage(`${type === "main" ? "Main" : "Review"} lesson deleted`);
       setDeleteDialogOpen(false); // Close dialog on success
     } catch (e) {
       console.error(e);
-      toast.error("Failed to delete item");
+      showErrorMessage("Failed to delete item");
     } finally {
       setIsDeleting(false);
       setItemToDelete(null);
@@ -342,9 +354,10 @@ export function LessonTemplateDialog({
   };
 
   const handleSaveSubItem = async (itemData: SubLesson | ReviewLesson) => {
+    setIsSubItemSaving(true);
     const currentId = getValues("id");
     if (!currentId) {
-      toast.error("ID missing");
+      showErrorMessage("ID missing");
       return;
     }
 
@@ -367,10 +380,12 @@ export function LessonTemplateDialog({
       } else {
         listHandler.append(savedItem);
       }
-      toast.success("Saved successfully");
+      showSuccessMessage("Saved successfully");
       setSubDialogOpen(false);
     } catch (error: any) {
-      toast.error("Failed to save lesson item");
+      showErrorMessage("Failed to save lesson item");
+    } finally {
+      setIsSubItemSaving(false);
     }
   };
 
@@ -396,7 +411,7 @@ export function LessonTemplateDialog({
     const columns: ColumnDef<SubLesson | ReviewLesson>[] = [
       {
         id: "sequence",
-        header: "Seq",
+        header: "Sequence",
         cell: ({ row }) => (
           <div className="flex items-center gap-0.5">
             <Button
@@ -436,16 +451,16 @@ export function LessonTemplateDialog({
       },
       ...(showTerm
         ? [
-            {
-              id: "term",
-              header: "Term",
-              cell: ({ row }: any) => (
-                <Badge variant="outline" className="bg-blue-50">
-                  {row.original.term || "-"}
-                </Badge>
-              ),
-            },
-          ]
+          {
+            id: "term",
+            header: "Term",
+            cell: ({ row }: any) => (
+              <Badge variant="outline" className="bg-blue-50 dark:bg-gray-800">
+                {row.original.term || "-"}
+              </Badge>
+            ),
+          },
+        ]
         : []),
       {
         id: "topic",
@@ -503,7 +518,7 @@ export function LessonTemplateDialog({
           data={fields}
           columns={columns}
           // Use _id (UUID) for stable row rendering to avoid conflicts with backend id
-          getRowId={(row: any) => row._id} 
+          getRowId={(row: any) => row._id}
           enablePagination={false}
           enableSorting={false}
         />
@@ -521,8 +536,8 @@ export function LessonTemplateDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl! h-[90vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="px-6 py-4 border-b bg-white">
+        <DialogContent className="max-w-full! w-screen! h-screen flex flex-col p-0 gap-0" onInteractOutside={e => e.preventDefault()}>
+          <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>
               {initialData
                 ? `Edit ${initialData.title}`
@@ -538,14 +553,13 @@ export function LessonTemplateDialog({
           ) : (
             <div className="flex flex-1 overflow-hidden">
               {/* SIDEBAR */}
-              <div className="w-64 border-r bg-slate-50/50 p-4 space-y-2 hidden sm:block">
+              <div className="w-64 border-r bg-slate-50/50 dark:bg-slate-700/50 p-4 space-y-2 hidden sm:block">
                 <div
                   onClick={() => setStep(1)}
-                  className={`px-4 py-3 rounded-lg cursor-pointer text-sm font-medium transition-colors border ${
-                    step === 1
-                      ? "bg-primary/10 text-primary border-primary/20"
-                      : "border-transparent text-slate-600 hover:bg-slate-100"
-                  }`}
+                  className={`px-4 py-3 rounded-lg cursor-pointer text-sm font-medium transition-colors border ${step === 1
+                    ? "bg-primary/10 text-primary border-primary/20"
+                    : "border-transparent text-slate-600 hover:bg-slate-100"
+                    }`}
                 >
                   1. Configuration
                 </div>
@@ -553,13 +567,12 @@ export function LessonTemplateDialog({
                   onClick={() => {
                     if (isStep2Accessible) setStep(2);
                   }}
-                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between border ${
-                    step === 2
-                      ? "bg-primary/10 text-primary border-primary/20"
-                      : isStep2Accessible
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between border ${step === 2
+                    ? "bg-primary/10 text-primary border-primary/20"
+                    : isStep2Accessible
                       ? "border-transparent text-slate-600 hover:bg-slate-100 cursor-pointer"
                       : "border-transparent text-slate-300 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   <span>2. Lessons</span>
                   {!isStep2Accessible && (
@@ -574,7 +587,7 @@ export function LessonTemplateDialog({
               </div>
 
               {/* CONTENT */}
-              <div className="flex-1 overflow-y-auto p-6 bg-white">
+              <div className="flex-1 overflow-y-auto p-6">
                 <Form {...form}>
                   {step === 1 && (
                     <div className="space-y-6 max-w-md mx-auto mt-4 animate-in fade-in slide-in-from-right-4">
@@ -596,9 +609,8 @@ export function LessonTemplateDialog({
                         />
 
                         <div
-                          className={`grid gap-4 ${
-                            mode === "normal" ? "grid-cols-2" : "grid-cols-1"
-                          }`}
+                          className={`grid gap-4 ${mode === "normal" ? "grid-cols-2" : "grid-cols-1"
+                            }`}
                         >
                           <FormField
                             control={control}
@@ -719,15 +731,21 @@ export function LessonTemplateDialog({
                             <Button
                               size="sm"
                               variant="outline"
-                              className="border-green-600 text-green-700 hover:bg-green-50"
+                              className="border-green-600 text-green-700 hover:bg-green-50 min-w-[130px]"
                               onClick={handleSaveSequence}
                               disabled={
+                                isSequenceSaving ||
                                 (activeTab === "review"
                                   ? reviewList.fields.length
                                   : mainList.fields.length) === 0
                               }
                             >
-                              <Save className="h-4 w-4 mr-2" /> Save Sequence
+                              {isSequenceSaving ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              ) : (
+                                <Save className="h-4 w-4 mr-2" />
+                              )}
+                              Save Sequence
                             </Button>
 
                             <Button
@@ -764,7 +782,7 @@ export function LessonTemplateDialog({
             </div>
           )}
 
-          <DialogFooter className="px-6 py-4 border-t bg-slate-50">
+          <DialogFooter className="px-6 py-4 border-t">
             {step === 1 ? (
               <div className="flex justify-between w-full">
                 <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -807,6 +825,7 @@ export function LessonTemplateDialog({
           topics={topics}
           onSave={handleSaveSubItem}
           terms={terms}
+          isLoading={isSubItemSaving}
         />
       )}
 

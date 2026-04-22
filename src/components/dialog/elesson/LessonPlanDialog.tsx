@@ -72,7 +72,7 @@ export function LessonPlanDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full! w-screen! h-screen flex flex-col p-0 gap-0 border-none [&>button]:hidden">
+      <DialogContent className="max-w-full! w-screen! h-screen flex flex-col p-0 gap-0 border-none [&>button]:hidden" onInteractOutside={e=>e.preventDefault()}>
         <DialogHeader className="p-4 bg-primary text-primary-foreground shrink-0">
           <DialogTitle className="flex items-center justify-between text-lg">
             {isTopical ? 'View Topical Tests Plan' : 'View E-Lesson Plan'}
@@ -117,7 +117,7 @@ export function LessonPlanDialog({
               </div>
 
               {/* --- CONTENT AREA --- */}
-              <div className="flex-1">
+              <div className="flex-1 min-w-0"> {/* min-w-0 prevents flex items from overflowing their container */}
                 {currentStep === 1 && (
                   <div className="space-y-6 max-w-2xl mx-auto md:mx-0 animate-in fade-in slide-in-from-right-4 duration-300">
                     
@@ -163,18 +163,24 @@ export function LessonPlanDialog({
                          </Button>
                     </div>
 
-                    <Tabs defaultValue={!isTopical ? "review" : "main"} onValueChange={setActiveTab}>
+                    <Tabs defaultValue={!isTopical ? "review" : "main"} onValueChange={setActiveTab} className="w-full">
                       <TabsList className="w-full justify-start overflow-x-auto h-auto p-1">
                         {!isTopical && <TabsTrigger value="review" className="flex-1 sm:flex-none">Review</TabsTrigger>}
                         <TabsTrigger value="main" className="flex-1 sm:flex-none">{isTopical ? "Topical Tests" : "Main Lesson"}</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="review" className="mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                        <CTable columns={listColumns("review")} data={data.review_lesson} />
+                        {/* Added w-full and overflow-x-auto here */}
+                        <div className="w-full overflow-x-auto pb-4">
+                          <CTable columns={listColumns("review")} data={data.review_lesson} />
+                        </div>
                       </TabsContent>
                       
                       <TabsContent value="main" className="mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                        <CTable columns={listColumns("main")} data={data.main_lesson} />
+                        {/* Added w-full and overflow-x-auto here */}
+                        <div className="w-full overflow-x-auto pb-4">
+                          <CTable columns={listColumns("main")} data={data.main_lesson} />
+                        </div>
                       </TabsContent>
                     </Tabs>
                   </div>

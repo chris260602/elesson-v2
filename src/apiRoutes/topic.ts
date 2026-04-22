@@ -4,25 +4,10 @@ export type TopicQuery = {
   year?: string;
   level?: string;
 };
-// export const fetchTopics = async (
-//   year?: string,
-//   level?: string
-// ): Promise<TopicType[]> => {
-//   let url;
-//   if (!year) {
-//     url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic`;
-//   } else {
-//     const levelParam = level === "0" || !level ? "0" : level;
-//     url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic?year=${year}&level=${levelParam}`;
-//   }
 
-//   const res = await AxiosInstance.get(url);
-//   return res.data.data || [];
-// };
 
 export const fetchTopics = async (data: TopicQuery): Promise<TopicType[]> => {
   let url;
-  console.log(data,"dts")
   if (data.level && data.year) {
     url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic?year=${data.year}&level=${data.level}`;
   } else {
@@ -37,4 +22,16 @@ export const fetchTopics = async (data: TopicQuery): Promise<TopicType[]> => {
 
   const res = await AxiosInstance.get(url);
   return res.data.data || [];
+};
+
+export const createTopic = async (newData: Partial<TopicType>) => {
+  return await AxiosInstance.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic`, newData);
+};
+
+export const updateTopic = async (id: string | number, data: Partial<TopicType>) => {
+  return await AxiosInstance.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic/${id}`, data);
+};
+
+export const deleteTopic = async (id: string | number) => {
+  return await AxiosInstance.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/topic/${id}`);
 };

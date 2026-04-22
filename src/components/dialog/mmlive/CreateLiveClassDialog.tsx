@@ -31,10 +31,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-// Define the type for the class item expected in the dropdown
 export type ClassDropdownItem = {
   id: number;
-  class_id: string; 
+  class_id: string;
 };
 
 // Form Schema
@@ -44,7 +43,6 @@ const formSchema = z.object({
   server: z.string().min(1, "Server is required"),
 });
 
-// Infer the type for external use
 export type CreateLiveClassFormValues = z.infer<typeof formSchema>;
 
 interface CreateLiveClassDialogProps {
@@ -78,14 +76,14 @@ export function CreateLiveClassDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onInteractOutside={e => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>New E-Learning</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
-            
+
             {/* Title */}
             <FormField
               control={form.control}

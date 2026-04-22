@@ -147,21 +147,21 @@ export const saveWorksheet = async (data: WorksheetDetail) => {
     }
 };
 
-export const checkWorksheetMedia = async (worksheetId: string, fileName: string, type: string) : Promise<{is_duplicated:boolean}>=> {
+export const checkWorksheetMedia = async (worksheetId: number, fileName: string, type: string) : Promise<{is_duplicated:boolean}>=> {
     const { data } = await AxiosInstance.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/check-worksheet-media`, {
         params: { elesson_worksheet_id: worksheetId, name: fileName, type }
     });
     return data; // Returns { is_duplicated: boolean }
 };
 
-export const deleteWorksheetMedia = async (mediaId: string) => {
+export const deleteWorksheetMedia = async (mediaId: number) => {
     await AxiosInstance.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/worksheet/media/${mediaId}`);
 };
 // 1. Define the base shape (everything is optional here)
 type BasePayload = {
   graphics?: WorksheetFile[];
   videos?: WorksheetFile[];
-  pdf?: WorksheetFile;
+  pdf?: WorksheetFile | null;
   latest_worksheets?: WorksheetFile[];
 };
 
@@ -172,7 +172,7 @@ type RequireAtLeastOne<T> = {
 
 // 3. Create your final type
 export type UpdateWorksheetMediaPayload = RequireAtLeastOne<BasePayload>;
-export const updateWorksheetMedia = async (id: string, payload: UpdateWorksheetMediaPayload) :Promise<WorksheetDetail>=> {
+export const updateWorksheetMedia = async (id: number, payload: UpdateWorksheetMediaPayload) :Promise<WorksheetDetail>=> {
     const { data } = await AxiosInstance.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/worksheet/${id}`, payload);
     return data.data;
 };

@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 
 export  const getPublicDOUrl = (
-    worksheetId: string,
+    worksheetId: number,
     type: string,
     fileName: string
   ) => {

@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { AuthorizeResult, UserType } from "../next-auth";
 import { getMe } from "./apiRoutes/auth";
+import { AuthorizeResult, UserType } from "../next-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -116,9 +116,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       // When Session Data is refreshed
       if (trigger === "update") {
-        console.log("KENA UPDATE")
         const tta = await getMe(token.accessToken as string);
-        console.log(tta,"ini tta")
         if (!tta) {
           // @ts-expect-error TS2790: The operand of a 'delete' operator must be optional.
           delete token.user;

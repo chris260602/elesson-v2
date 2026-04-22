@@ -24,7 +24,7 @@ export function ArchiveWorksheetDialog({ open, onOpenChange, onArchive, isLoadin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm" onInteractOutside={e=>e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Archive by Year</DialogTitle>
         </DialogHeader>

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { CLASSES_QUERY_KEY, E_LEARNING_QUERY_KEY } from "@/const/queryKey";
+import { invalidateELearning } from "@/utils/tanStackUtils";
 import { ColumnDef } from "@tanstack/react-table";
 import { RotateCcw, Plus, Trash2, ExternalLink, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,32 +21,30 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CTable } from "@/components/core/CTable";
-import AxiosInstance from "@/utils/axiosInstance";
 
 // Custom Components
 import { CreateLiveClassDialog, CreateLiveClassFormValues } from "@/components/dialog/mmlive/CreateLiveClassDialog";
 import { useSession } from "next-auth/react";
-import { fetchClasses, fetchLiveClasses } from "@/apiRoutes/class";
+import { fetchClasses, fetchLiveClasses, createLiveClass, deleteLiveClass } from "@/apiRoutes/class";
 import { LiveClassType } from "@/types/class";
-import { FunButton } from "@/components/core/FunButton";
+import { showErrorMessage, showSuccessMessage } from "@/utils/notificationUtils";
 
 
 export default function MMLivePage() {
-      const { data: session } = useSession();
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<LiveClassType | null>(null);
 
-  const isStudent = session?.user.user.child_id; 
-  console.log(session,"sesi")
+  const isStudent = session?.user.user.child_id;
   // --- QUERIES ---
   const { data: classes = [] } = useQuery({
-    queryKey: ["classes"],
+    queryKey: [CLASSES_QUERY_KEY],
     queryFn: fetchClasses,
   });
 
   const { data: items = [], isLoading, refetch } = useQuery({
-    queryKey: ["elearning"],
+    queryKey: [E_LEARNING_QUERY_KEY],
     queryFn: fetchLiveClasses,
   });
 
@@ -53,33 +52,33 @@ export default function MMLivePage() {
   const createMutation = useMutation({
     mutationFn: async (data: CreateLiveClassFormValues) => {
       const payload = {
-          title: data.title,
-          class: data.class_id, 
-          server: data.server
+        title: data.title,
+        class: data.class_id,
+        server: data.server
       };
-      return await AxiosInstance.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/elearning`, payload);
+      return await createLiveClass(payload);
     },
     onSuccess: () => {
-      toast.success("Online class created successfully");
+      showSuccessMessage("Online class created successfully");
       setIsCreateOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["elearning"] });
+      invalidateELearning(queryClient);
     },
     onError: (err: any) => {
-        toast.error(err.response?.data?.message || "Failed to create class");
+      showErrorMessage(err.response?.data?.message || "Failed to create class");
     }
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await AxiosInstance.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/elearning/${id}`);
+      return await deleteLiveClass(id);
     },
     onSuccess: () => {
-      toast.success("Deleted successfully");
+      showSuccessMessage("Deleted successfully");
       setDeleteTarget(null);
-      queryClient.invalidateQueries({ queryKey: ["elearning"] });
+      invalidateELearning(queryClient);
     },
     onError: (err: any) => {
-        toast.error(err.response?.data?.message || "Failed to delete class");
+      showErrorMessage(err.response?.data?.message || "Failed to delete class");
     }
   });
 
@@ -95,21 +94,21 @@ export default function MMLivePage() {
   const columns: ColumnDef<LiveClassType>[] = [
     { accessorKey: "class", header: "Class" },
     { accessorKey: "title", header: "Title" },
-    { 
-      accessorKey: "server", 
+    {
+      accessorKey: "server",
       header: "Server",
       cell: ({ row }) => capitalize(row.original.server)
     },
-    { 
-      accessorKey: "status", 
+    {
+      accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
         const status = row.original.status?.toLowerCase();
         const isOpen = status === "open" || status === "active";
         return (
-            <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${isOpen ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${isOpen ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
             {status ? capitalize(status) : "Unknown"}
-            </span>
+          </span>
         )
       }
     },
@@ -119,17 +118,17 @@ export default function MMLivePage() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button 
-            className=" h-8 px-3" 
+          <Button
+            className=" h-8 px-3"
             onClick={() => handleJoin(row.original)}
           >
             <ExternalLink className="h-3 w-3 mr-1" /> Join
           </Button>
-          
+
           {!isStudent && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
+            <Button
+              variant="destructive"
+              size="sm"
               className="h-8 px-3"
               onClick={() => setDeleteTarget(row.original)}
             >
@@ -143,7 +142,7 @@ export default function MMLivePage() {
 
   return (
     <div>
-      
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-4">
@@ -172,12 +171,12 @@ export default function MMLivePage() {
       </Card>
 
       <div className="mt-8 flex justify-center text-center">
-        <h2 className="text-lg font-bold text-slate-700 max-w-2xl">
+        <h2 className="text-lg font-bold max-w-2xl">
           MM LIVE (Learning with Integrated Vizualizer Enhanced) is only available for Online Classes only
         </h2>
       </div>
 
-      <CreateLiveClassDialog 
+      <CreateLiveClassDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         classes={classes}
@@ -195,7 +194,7 @@ export default function MMLivePage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 if (deleteTarget) deleteMutation.mutate(deleteTarget.meeting_id);

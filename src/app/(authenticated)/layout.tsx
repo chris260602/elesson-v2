@@ -16,7 +16,7 @@ export default async function AuthenticatedLayout({
       <CustomAppProvider>
         <PermissionHandler />
         <div className="w-full">
-        <SidebarProvider style={{ "--sidebar-width": "280px" } as React.CSSProperties}>
+          <SidebarProvider style={{ "--sidebar-width": "280px" } as React.CSSProperties}>
             <AppSidebar />
             <main className="w-full overflow-auto bg-[linear-gradient(to_bottom_right,_#f5f3ff,_#eff6ff,_#e0e7ff)] dark:bg-none dark:bg-neutral-800">
               <AppHeader />
@@ -24,8 +24,8 @@ export default async function AuthenticatedLayout({
             </main>
           </SidebarProvider>
         </div>
-        
-         
+
+
       </CustomAppProvider>
     </TanstackProvider>
   );

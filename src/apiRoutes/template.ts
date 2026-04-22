@@ -1,9 +1,12 @@
-import { LessonResponse, LessonPlan, TemplateItem, SubLesson, ReviewLesson } from "@/types/template";
+import { LessonPlan, TemplateItem, SubLesson, ReviewLesson, LessonType } from "@/types/template";
 import AxiosInstance from "@/utils/axiosInstance";
 import { MetaType } from "./main";
 import { LevelType } from "@/types/level";
 
-
+export type LessonResponse = {
+  data: LessonType[];
+  meta: MetaType;
+}
 export type TemplateResponse = {
   data: TemplateItem[];
   meta: MetaType;
@@ -33,7 +36,6 @@ export const fetchTemplates = async (
   limit: number,
   page: number
 ): Promise<TemplateResponse> => {
-  // TODO: Implement on backend
   const { data } = await AxiosInstance.get(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/template?limit=${limit}&page=${page}`
   );
@@ -44,8 +46,8 @@ export const fetchArchivedLesson = async (
   year: string,
   limit: number,
   page: number
-): Promise<LessonResponse> => {
-  const res = await AxiosInstance.get<LessonResponse>(
+): Promise<TemplateResponse> => {
+  const res = await AxiosInstance.get<TemplateResponse>(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/archived/template/${year}?limit=${limit}&page=${page}`
   );
   return res.data || [];
@@ -81,8 +83,7 @@ export const cloneTemplate = async (id: number): Promise<string[]> => {
 };
 
 export const saveTemplate = async (data: LessonPlan) => {
-  // TODO: Implement on backend
-  if (data.id && data.id !== "0") {
+  if (data.id && data.id !== 0) {
     // Update existing
     const { data: res } = await AxiosInstance.patch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/template/${data.id}`,
@@ -99,8 +100,6 @@ export const saveTemplate = async (data: LessonPlan) => {
   }
 };
 
-
-// NEW
 
 export const togglePublishTemplate = async (
   id: number, 
@@ -120,10 +119,7 @@ export const togglePublishTemplate = async (
   return data;
 };
 
-/**
- * Saves (Create or Update) a Sub-Lesson (Main or Review).
- * Matches Vue: post('e-lesson/main') or patch('e-lesson/main/'+id)
- */
+
 export const saveSubLesson = async (
   type: "main" | "review", 
   data: any
@@ -147,10 +143,7 @@ export const saveSubLesson = async (
   }
 };
 
-/**
- * Deletes a Sub-Lesson.
- * Matches Vue: delete('e-lesson/main/' + item.id)
- */
+
 export const deleteSubLesson = async (
   type: "main" | "review", 
   id: string | number
@@ -162,10 +155,7 @@ export const deleteSubLesson = async (
   return data;
 };
 
-/**
- * Updates the sequence of lessons.
- * Matches Vue: patch('e-lesson/'+req_type+'/sequence/' + template_id, item)
- */
+
 export const updateLessonSequence = async (
   templateId: string,
   type: "main" | "review",
@@ -190,6 +180,22 @@ export const createLessonTemplate = async (data: LessonPlan) => {
 export const updateLessonTemplate = async (id: number | string, data: CreateLessonPlanType) => {
   // Vue: this.$AxiosInstance.patch('e-lesson/template/' + id, ...)
   const response = await AxiosInstance.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/template/${id}`, data);
+  return response.data.data;
+};
+ 
+export const verifyPasscode = async (payload: { main_lesson_id: number; passcode: string }) => {
+  const response = await AxiosInstance.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/template/passcode`, payload);
+  const json = response.data;
+ 
+  if (!json.status) {
+    throw new Error(json.message || "Wrong Passcode");
+  }
+ 
+  return json;
+};
+ 
+export const fetchTemplatesList = async (): Promise<TemplateItem[]> => {
+  const response = await AxiosInstance.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/e-lesson/template?limit=999`);
   return response.data.data;
 };
 
